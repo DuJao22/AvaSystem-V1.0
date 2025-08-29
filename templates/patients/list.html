@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Pacientes - Sistema TEA{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Pacientes</h1>
+        {% if session.user_perfil in ['coordenacao', 'admin', 'medico'] %}
+        <a href="{{ url_for('patients.new') }}" class="btn-primary">
+            <i data-feather="plus" class="w-4 h-4 mr-2"></i>
+            Novo Paciente
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Search Form -->
+    <div class="bg-white shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <form method="GET" class="flex gap-4">
+                <div class="flex-1">
+                    <label for="q" class="sr-only">Buscar</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-feather="search" class="h-5 w-5 text-gray-400"></i>
+                        </div>
+                        <input type="text" name="q" id="q" value="{{ query }}"
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="Buscar por nome, CPF ou telefone">
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">
+                    Buscar
+                </button>
+                {% if query %}
+                <a href="{{ url_for('patients.list') }}" class="btn-secondary">
+                    Limpar
+                </a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-md">
+        <ul class="divide-y divide-gray-200">
+            {% for patient in patients %}
+            <li>
+                <a href="{{ url_for('patients.detail', id=patient.id) }}" class="block hover:bg-gray-50">
+                    <div class="px-4 py-4 sm:px-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <i data-feather="user" class="h-6 w-6 text-gray-400"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ patient.nome }}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        CPF: {{ patient.format_cpf() }}
+                                        {% if patient.telefone %}
+                                        | Telefone: {{ patient.format_phone() }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <i data-feather="chevron-right" class="h-5 w-5 text-gray-400"></i>
+                            </div>
+                        </div>
+                        {% if patient.local_referencia %}
+                        <div class="mt-2">
+                            <div class="text-sm text-gray-500">
+                                <i data-feather="map-pin" class="h-4 w-4 inline mr-1"></i>
+                                {{ patient.local_referencia }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </a>
+            </li>
+            {% endfor %}
+            {% if not patients %}
+            <li class="px-4 py-12 text-center">
+                <i data-feather="users" class="mx-auto h-12 w-12 text-gray-400"></i>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhum paciente encontrado</h3>
+                {% if query %}
+                <p class="mt-1 text-sm text-gray-500">
+                    Tente alterar os termos de busca.
+                </p>
+                {% else %}
+                <p class="mt-1 text-sm text-gray-500">
+                    Comece cadastrando um novo paciente.
+                </p>
+                {% endif %}
+                {% if session.user_perfil in ['coordenacao', 'admin', 'medico'] %}
+                <div class="mt-6">
+                    <a href="{{ url_for('patients.new') }}" class="btn-primary">
+                        <i data-feather="plus" class="w-4 h-4 mr-2"></i>
+                        Novo Paciente
+                    </a>
+                </div>
+                {% endif %}
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+
+    <!-- Pagination -->
+    {% if has_prev or has_next %}
+    <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-6 rounded-lg">
+        <div class="flex-1 flex justify-between sm:hidden">
+            {% if has_prev %}
+            <a href="{{ url_for('patients.list', page=page-1, q=query) }}" 
+               class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Anterior
+            </a>
+            {% endif %}
+            {% if has_next %}
+            <a href="{{ url_for('patients.list', page=page+1, q=query) }}" 
+               class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Próximo
+            </a>
+            {% endif %}
+        </div>
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm text-gray-700">
+                    Página <span class="font-medium">{{ page }}</span>
+                </p>
+            </div>
+            <div>
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                    {% if has_prev %}
+                    <a href="{{ url_for('patients.list', page=page-1, q=query) }}" 
+                       class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <i data-feather="chevron-left" class="h-5 w-5"></i>
+                    </a>
+                    {% endif %}
+                    {% if has_next %}
+                    <a href="{{ url_for('patients.list', page=page+1, q=query) }}" 
+                       class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <i data-feather="chevron-right" class="h-5 w-5"></i>
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

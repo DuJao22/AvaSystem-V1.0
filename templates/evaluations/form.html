@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Avaliação - Sistema TEA{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <div class="flex items-center mb-6">
+        <a href="{{ url_for('evaluations.list') }}" class="text-gray-500 hover:text-gray-700 mr-4">
+            <i data-feather="arrow-left" class="h-5 w-5"></i>
+        </a>
+        <h1 class="text-2xl font-bold text-gray-900">Nova Avaliação</h1>
+    </div>
+
+    <div class="max-w-4xl mx-auto">
+        <form method="POST" class="space-y-6">
+            <!-- Patient Selection -->
+            <div class="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
+                <div class="md:grid md:grid-cols-3 md:gap-6">
+                    <div class="md:col-span-1">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900">Paciente</h3>
+                        <p class="mt-1 text-sm text-gray-500">
+                            Selecione o paciente para esta avaliação.
+                        </p>
+                    </div>
+                    <div class="mt-5 md:mt-0 md:col-span-2">
+                        <div>
+                            <label for="paciente_id" class="block text-sm font-medium text-gray-700">
+                                Paciente *
+                            </label>
+                            <select name="paciente_id" id="paciente_id" required
+                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                                <option value="">Selecione um paciente</option>
+                                {% for patient in patients %}
+                                <option value="{{ patient.id }}" 
+                                        {% if form_data and form_data.get('paciente_id') == patient.id|string %}selected{% endif %}
+                                        {% if request.args.get('paciente_id') == patient.id|string %}selected{% endif %}>
+                                    {{ patient.nome }} - {{ patient.format_cpf() }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Evaluation Details -->
+            <div class="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
+                <div class="md:grid md:grid-cols-3 md:gap-6">
+                    <div class="md:col-span-1">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900">Detalhes da Avaliação</h3>
+                        <p class="mt-1 text-sm text-gray-500">
+                            Informações sobre a avaliação realizada.
+                        </p>
+                    </div>
+                    <div class="mt-5 md:mt-0 md:col-span-2">
+                        <div class="grid grid-cols-6 gap-6">
+                            <div class="col-span-6 sm:col-span-3">
+                                <label for="especialidade" class="block text-sm font-medium text-gray-700">
+                                    Especialidade *
+                                </label>
+                                <select name="especialidade" id="especialidade" required
+                                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                                    <option value="">Selecione a especialidade</option>
+                                    {% for specialty in specialties %}
+                                    <option value="{{ specialty }}" 
+                                            {% if form_data and form_data.get('especialidade') == specialty %}selected{% endif %}
+                                            {% if session.user_especialidade == specialty %}selected{% endif %}>
+                                        {{ specialty }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-span-6 sm:col-span-3">
+                                <label for="local" class="block text-sm font-medium text-gray-700">
+                                    Local da avaliação *
+                                </label>
+                                <select name="local" id="local" required
+                                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                                    <option value="">Selecione o local</option>
+                                    {% for location in locations %}
+                                    <option value="{{ location }}" 
+                                            {% if form_data and form_data.get('local') == location %}selected{% endif %}>
+                                        {{ location }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-span-6">
+                                <label for="observacoes" class="block text-sm font-medium text-gray-700">
+                                    Observações
+                                </label>
+                                <textarea name="observacoes" id="observacoes" rows="4"
+                                          class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                                          placeholder="Observações sobre a avaliação...">{{ form_data.get('observacoes', '') if form_data else '' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Therapy Recommendations -->
+            <div class="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
+                <div class="md:grid md:grid-cols-3 md:gap-6">
+                    <div class="md:col-span-1">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900">Terapias Recomendadas</h3>
+                        <p class="mt-1 text-sm text-gray-500">
+                            Selecione as terapias recomendadas para o paciente.
+                        </p>
+                    </div>
+                    <div class="mt-5 md:mt-0 md:col-span-2">
+                        <fieldset>
+                            <div class="space-y-4">
+                                {% for therapy in available_therapies %}
+                                <div class="flex items-start">
+                                    <div class="flex items-center h-5">
+                                        <input id="terapia_{{ loop.index }}" name="terapias" type="checkbox" value="{{ therapy }}"
+                                               {% if form_data and therapy in form_data.getlist('terapias') %}checked{% endif %}
+                                               class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
+                                    </div>
+                                    <div class="ml-3 text-sm">
+                                        <label for="terapia_{{ loop.index }}" class="font-medium text-gray-700">
+                                            {{ therapy }}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </fieldset>
+                        <p class="mt-2 text-sm text-gray-500">
+                            * Pelo menos uma terapia deve ser selecionada
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <a href="{{ url_for('evaluations.list') }}" 
+                   class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Cancelar
+                </a>
+                <button type="submit" 
+                        class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Salvar Avaliação
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-select user's specialty if available
+    const especialidadeSelect = document.getElementById('especialidade');
+    const userEspecialidade = '{{ session.user_especialidade }}';
+    
+    if (userEspecialidade && !especialidadeSelect.value) {
+        especialidadeSelect.value = userEspecialidade;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Relatório por Médicos - Sistema TEA{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+            <a href="{{ url_for('reports.index') }}" class="text-gray-500 hover:text-gray-700 mr-4">
+                <i data-feather="arrow-left" class="h-5 w-5"></i>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-900">Relatório por Médicos</h1>
+        </div>
+        <a href="{{ url_for('reports.export_doctors_csv') }}" class="btn-primary">
+            <i data-feather="download" class="w-4 h-4 mr-2"></i>
+            Exportar CSV
+        </a>
+    </div>
+
+    <!-- Summary -->
+    <div class="bg-white shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Resumo Geral</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {% set total_doctors = doctor_stats.keys() | list | length %}
+                {% set total_allocated = doctor_stats.values() | sum(attribute='alocado') %}
+                {% set total_in_treatment = doctor_stats.values() | sum(attribute='em_atendimento') %}
+                {% set total_completed = doctor_stats.values() | sum(attribute='concluido') %}
+                
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-900">{{ total_doctors }}</div>
+                    <div class="text-sm text-gray-500">Médicos Ativos</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">{{ total_allocated }}</div>
+                    <div class="text-sm text-gray-500">Procedimentos Alocados</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600">{{ total_in_treatment }}</div>
+                    <div class="text-sm text-gray-500">Em Atendimento</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">{{ total_completed }}</div>
+                    <div class="text-sm text-gray-500">Concluídos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Table -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Médico (Especialidade)
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Alocado
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Em Atendimento
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Concluído
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Total
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Taxa de Conclusão
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Carga de Trabalho
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for doctor, stats in doctor_stats.items() %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ doctor }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="badge bg-blue-100 text-blue-800">{{ stats.alocado }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="badge bg-purple-100 text-purple-800">{{ stats.em_atendimento }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="badge bg-green-100 text-green-800">{{ stats.concluido }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-900">
+                                {{ stats.total }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
+                                {% if stats.total > 0 %}
+                                    {{ (stats.concluido / stats.total * 100) | round(1) }}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                {% set current_load = stats.alocado + stats.em_atendimento %}
+                                {% if current_load == 0 %}
+                                    <span class="badge bg-gray-100 text-gray-800">Livre</span>
+                                {% elif current_load <= 3 %}
+                                    <span class="badge bg-green-100 text-green-800">Baixa</span>
+                                {% elif current_load <= 6 %}
+                                    <span class="badge bg-yellow-100 text-yellow-800">Média</span>
+                                {% else %}
+                                    <span class="badge bg-red-100 text-red-800">Alta</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if not doctor_stats %}
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center">
+                                <i data-feather="user-check" class="mx-auto h-12 w-12 text-gray-400"></i>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhum médico com procedimentos</h3>
+                                <p class="mt-1 text-sm text-gray-500">
+                                    Não há médicos com procedimentos alocados no momento.
+                                </p>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Charts -->
+    {% if doctor_stats %}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <!-- Completion Rate Chart -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Taxa de Conclusão por Médico</h3>
+                <div class="space-y-4">
+                    {% for doctor, stats in (doctor_stats.items() | sort(attribute='1.concluido', reverse=true))[:5] %}
+                    {% if stats.total > 0 %}
+                    <div>
+                        <div class="flex justify-between text-sm">
+                            <span class="truncate">{{ doctor.split('(')[0].strip() }}</span>
+                            <span>{{ (stats.concluido / stats.total * 100) | round(1) }}%</span>
+                        </div>
+                        <div class="mt-1 bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-600 h-2 rounded-full" 
+                                 style="width: {{ (stats.concluido / stats.total * 100) }}%"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Workload Distribution -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Distribuição de Carga de Trabalho</h3>
+                <div class="space-y-4">
+                    {% set workload_counts = {'Livre': 0, 'Baixa': 0, 'Média': 0, 'Alta': 0} %}
+                    {% for doctor, stats in doctor_stats.items() %}
+                        {% set current_load = stats.alocado + stats.em_atendimento %}
+                        {% if current_load == 0 %}
+                            {% set _ = workload_counts.update({'Livre': workload_counts.Livre + 1}) %}
+                        {% elif current_load <= 3 %}
+                            {% set _ = workload_counts.update({'Baixa': workload_counts.Baixa + 1}) %}
+                        {% elif current_load <= 6 %}
+                            {% set _ = workload_counts.update({'Média': workload_counts.Média + 1}) %}
+                        {% else %}
+                            {% set _ = workload_counts.update({'Alta': workload_counts.Alta + 1}) %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% set total_doctors_with_load = workload_counts.values() | sum %}
+                    {% for load_type, count in workload_counts.items() %}
+                    {% if count > 0 %}
+                    <div>
+                        <div class="flex justify-between text-sm">
+                            <span>{{ load_type }}</span>
+                            <span>{{ count }} médicos</span>
+                        </div>
+                        <div class="mt-1 bg-gray-200 rounded-full h-2">
+                            {% if load_type == 'Livre' %}
+                                {% set color_class = 'bg-gray-600' %}
+                            {% elif load_type == 'Baixa' %}
+                                {% set color_class = 'bg-green-600' %}
+                            {% elif load_type == 'Média' %}
+                                {% set color_class = 'bg-yellow-600' %}
+                            {% else %}
+                                {% set color_class = 'bg-red-600' %}
+                            {% endif %}
+                            <div class="{{ color_class }} h-2 rounded-full" 
+                                 style="width: {{ (count / total_doctors_with_load * 100) if total_doctors_with_load > 0 else 0 }}%"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

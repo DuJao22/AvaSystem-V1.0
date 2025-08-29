@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Avaliação - {{ evaluation.paciente_nome }} - Sistema TEA{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+            <a href="{{ url_for('evaluations.list') }}" class="text-gray-500 hover:text-gray-700 mr-4">
+                <i data-feather="arrow-left" class="h-5 w-5"></i>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Avaliação - {{ evaluation.paciente_nome }}</h1>
+                <p class="text-sm text-gray-500">
+                    {{ evaluation.especialidade }} por {{ evaluation.medico_nome }}
+                </p>
+            </div>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('patients.detail', id=evaluation.paciente_id) }}" class="btn-secondary">
+                <i data-feather="user" class="w-4 h-4 mr-2"></i>
+                Ver Paciente
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Evaluation Details -->
+        <div class="lg:col-span-2">
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Detalhes da Avaliação</h3>
+                    
+                    <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Paciente</dt>
+                            <dd class="mt-1 text-sm text-gray-900">
+                                <a href="{{ url_for('patients.detail', id=evaluation.paciente_id) }}" 
+                                   class="text-blue-600 hover:text-blue-500">
+                                    {{ evaluation.paciente_nome }}
+                                </a>
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Médico responsável</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ evaluation.medico_nome }}</dd>
+                        </div>
+
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Especialidade</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ evaluation.especialidade }}</dd>
+                        </div>
+
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Local da avaliação</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ evaluation.local }}</dd>
+                        </div>
+
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Data da avaliação</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ format_datetime(evaluation.criado_em) }}</dd>
+                        </div>
+                    </dl>
+
+                    {% if evaluation.observacoes %}
+                    <div class="mt-6">
+                        <dt class="text-sm font-medium text-gray-500">Observações</dt>
+                        <dd class="mt-2 text-sm text-gray-900 bg-gray-50 rounded-md p-4">
+                            {{ evaluation.observacoes }}
+                        </dd>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Therapy Recommendations -->
+        <div class="lg:col-span-1">
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Terapias Recomendadas</h3>
+                    
+                    {% if evaluation.terapias %}
+                    <div class="space-y-3">
+                        {% for terapia in evaluation.terapias %}
+                        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                            <div class="flex items-center">
+                                <i data-feather="check-circle" class="h-5 w-5 text-green-500 mr-3"></i>
+                                <span class="text-sm font-medium text-green-900">{{ terapia }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-gray-500">Nenhuma terapia recomendada nesta avaliação.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Related Procedures -->
+            <div class="bg-white shadow rounded-lg mt-6">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Procedimentos Gerados</h3>
+                    
+                    <div class="space-y-2">
+                        {% for terapia in evaluation.terapias %}
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-900">{{ terapia }}</span>
+                            <span class="badge bg-yellow-100 text-yellow-800">Gerado</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('distribution.center') }}" 
+                           class="text-sm text-blue-600 hover:text-blue-500">
+                            Ver no Centro de Distribuição →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

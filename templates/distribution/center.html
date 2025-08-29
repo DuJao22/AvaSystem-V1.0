@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block title %}Centro de Distribuição - Sistema TEA{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Centro de Distribuição</h1>
+        <div class="flex space-x-3">
+            <div class="flex rounded-md shadow-sm">
+                <a href="{{ url_for('distribution.center', view='table', **filters) }}" 
+                   class="px-4 py-2 text-sm font-medium {% if view_type == 'table' %}bg-blue-600 text-white{% else %}bg-white text-gray-700 hover:bg-gray-50{% endif %} border border-gray-300 rounded-l-md">
+                    <i data-feather="list" class="w-4 h-4 mr-2"></i>
+                    Tabela
+                </a>
+                <a href="{{ url_for('distribution.center', view='kanban', **filters) }}" 
+                   class="px-4 py-2 text-sm font-medium {% if view_type == 'kanban' %}bg-blue-600 text-white{% else %}bg-white text-gray-700 hover:bg-gray-50{% endif %} border-t border-r border-b border-gray-300 rounded-r-md">
+                    <i data-feather="columns" class="w-4 h-4 mr-2"></i>
+                    Kanban
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <form method="GET" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <input type="hidden" name="view" value="{{ view_type }}">
+                
+                <div>
+                    <label for="especialidade" class="block text-sm font-medium text-gray-700">
+                        Especialidade
+                    </label>
+                    <select name="especialidade" id="especialidade"
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                        <option value="">Todas as especialidades</option>
+                        {% for specialty in specialties %}
+                        <option value="{{ specialty }}" {% if filters.get('especialidade') == specialty %}selected{% endif %}>
+                            {{ specialty }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="estado" class="block text-sm font-medium text-gray-700">
+                        Estado
+                    </label>
+                    <select name="estado" id="estado"
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                        <option value="">Todos os estados</option>
+                        {% for state_value, state_label in states %}
+                        <option value="{{ state_value }}" {% if filters.get('estado') == state_value %}selected{% endif %}>
+                            {{ state_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {% if session.user_perfil == 'medico' %}
+                <div>
+                    <label for="meus_procedimentos" class="block text-sm font-medium text-gray-700">
+                        Filtrar
+                    </label>
+                    <select name="meus_procedimentos" id="meus_procedimentos"
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                        <option value="">Todos os procedimentos</option>
+                        <option value="1" {% if request.args.get('meus_procedimentos') == '1' %}selected{% endif %}>
+                            Apenas meus procedimentos
+                        </option>
+                    </select>
+                </div>
+                {% endif %}
+
+                <div class="flex items-end space-x-3">
+                    <button type="submit" class="btn-primary">
+                        Filtrar
+                    </button>
+                    <a href="{{ url_for('distribution.center', view=view_type) }}" class="btn-secondary">
+                        Limpar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if view_type == 'table' %}
+    <!-- Table View -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Paciente
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Especialidade
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Estado
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Responsável
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Atualizado em
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Ações
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for procedure in procedures %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">
+                                        <a href="{{ url_for('patients.detail', id=procedure.paciente_id) }}" 
+                                           class="text-blue-600 hover:text-blue-500">
+                                            {{ procedure.paciente_nome }}
+                                        </a>
+                                    </div>
+                                    <div class="text-sm text-gray-500">{{ procedure.paciente_cpf }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ procedure.especialidade }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="badge {{ procedure.get_state_badge_class() }}">
+                                {{ procedure.get_state_display() }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ procedure.medico_nome or '-' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ format_datetime(procedure.atualizado_em) }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                            {% include 'distribution/_procedure_actions.html' %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not procedures %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center">
+                            <i data-feather="inbox" class="mx-auto h-12 w-12 text-gray-400"></i>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhum procedimento encontrado</h3>
+                            <p class="mt-1 text-sm text-gray-500">
+                                Tente alterar os filtros ou aguarde por novas avaliações.
+                            </p>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Kanban View -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-4 py-3 bg-yellow-50 rounded-t-lg border-b">
+                <h3 class="text-lg font-medium text-yellow-800">Pendente</h3>
+            </div>
+            <div class="p-4 space-y-4 min-h-96">
+                {% for specialty, procedures_by_state in procedures_by_specialty.items() %}
+                    {% for procedure in procedures_by_state.pendente %}
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="text-sm font-medium text-gray-900">{{ procedure.paciente_nome }}</h4>
+                            <span class="badge bg-gray-100 text-gray-800">{{ procedure.especialidade }}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-3">{{ procedure.paciente_cpf }}</p>
+                        {% include 'distribution/_procedure_actions.html' %}
+                    </div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-4 py-3 bg-blue-50 rounded-t-lg border-b">
+                <h3 class="text-lg font-medium text-blue-800">Alocado</h3>
+            </div>
+            <div class="p-4 space-y-4 min-h-96">
+                {% for specialty, procedures_by_state in procedures_by_specialty.items() %}
+                    {% for procedure in procedures_by_state.alocado %}
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="text-sm font-medium text-gray-900">{{ procedure.paciente_nome }}</h4>
+                            <span class="badge bg-gray-100 text-gray-800">{{ procedure.especialidade }}</span>
+                        </div>
+                        <p class="text-xs text-gray-500">{{ procedure.paciente_cpf }}</p>
+                        <p class="text-xs text-blue-600 mb-3">{{ procedure.medico_nome }}</p>
+                        {% include 'distribution/_procedure_actions.html' %}
+                    </div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-4 py-3 bg-purple-50 rounded-t-lg border-b">
+                <h3 class="text-lg font-medium text-purple-800">Em Atendimento</h3>
+            </div>
+            <div class="p-4 space-y-4 min-h-96">
+                {% for specialty, procedures_by_state in procedures_by_specialty.items() %}
+                    {% for procedure in procedures_by_state.em_atendimento %}
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="text-sm font-medium text-gray-900">{{ procedure.paciente_nome }}</h4>
+                            <span class="badge bg-gray-100 text-gray-800">{{ procedure.especialidade }}</span>
+                        </div>
+                        <p class="text-xs text-gray-500">{{ procedure.paciente_cpf }}</p>
+                        <p class="text-xs text-purple-600 mb-3">{{ procedure.medico_nome }}</p>
+                        {% include 'distribution/_procedure_actions.html' %}
+                    </div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Action Modals -->
+<div id="releaseModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Devolver Procedimento</h3>
+            <form id="releaseForm" method="POST" action="{{ url_for('distribution.release_patient') }}">
+                <input type="hidden" name="procedure_id" id="releaseProcedureId">
+                <div class="mb-4">
+                    <label for="motivo" class="block text-sm font-medium text-gray-700">
+                        Motivo da devolução *
+                    </label>
+                    <textarea name="motivo" id="motivo" rows="3" required
+                              class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                              placeholder="Descreva o motivo da devolução..."></textarea>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeReleaseModal()" 
+                            class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Cancelar
+                    </button>
+                    <button type="submit" 
+                            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
+                        Devolver
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openReleaseModal(procedureId) {
+    document.getElementById('releaseProcedureId').value = procedureId;
+    document.getElementById('releaseModal').classList.remove('hidden');
+}
+
+function closeReleaseModal() {
+    document.getElementById('releaseModal').classList.add('hidden');
+    document.getElementById('motivo').value = '';
+}
+
+// Close modal when clicking outside
+document.getElementById('releaseModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeReleaseModal();
+    }
+});
+</script>
+{% endblock %}

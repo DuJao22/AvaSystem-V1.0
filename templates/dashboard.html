@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sistema TEA{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
+    
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="users" class="h-6 w-6 text-gray-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total de Pacientes</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ total_patients }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="clock" class="h-6 w-6 text-yellow-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Procedimentos Pendentes</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ total_pending }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="user-check" class="h-6 w-6 text-blue-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Procedimentos Alocados</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ total_allocated }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="check-circle" class="h-6 w-6 text-green-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Avaliações esta Semana</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ recent_evaluations }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User-specific stats for doctors -->
+    {% if user_stats %}
+    <div class="bg-white shadow rounded-lg mb-8">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Meus Procedimentos</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">{{ user_stats.meus_alocados }}</div>
+                    <div class="text-sm text-gray-500">Alocados</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600">{{ user_stats.meus_em_atendimento }}</div>
+                    <div class="text-sm text-gray-500">Em Atendimento</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">{{ user_stats.meus_concluidos }}</div>
+                    <div class="text-sm text-gray-500">Concluídos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Specialty Statistics -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Estatísticas por Especialidade</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Especialidade
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Pendente
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Alocado
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Em Atendimento
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Concluído
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Total
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for specialty, stats in specialty_stats.items() %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ specialty }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <span class="badge bg-yellow-100 text-yellow-800">{{ stats.pendente }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <span class="badge bg-blue-100 text-blue-800">{{ stats.alocado }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <span class="badge bg-purple-100 text-purple-800">{{ stats.em_atendimento }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <span class="badge bg-green-100 text-green-800">{{ stats.concluido }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ stats.total }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if not specialty_stats %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                                Nenhum procedimento encontrado
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {% if session.user_perfil in ['coordenacao', 'admin', 'medico'] %}
+        <a href="{{ url_for('patients.new') }}" 
+           class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
+            <div class="flex items-center">
+                <i data-feather="user-plus" class="h-8 w-8 text-blue-600"></i>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Novo Paciente</h3>
+                    <p class="text-sm text-gray-600">Cadastrar novo paciente</p>
+                </div>
+            </div>
+        </a>
+        {% endif %}
+        
+        {% if session.user_perfil in ['medico', 'admin'] %}
+        <a href="{{ url_for('evaluations.new') }}" 
+           class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
+            <div class="flex items-center">
+                <i data-feather="file-plus" class="h-8 w-8 text-green-600"></i>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Nova Avaliação</h3>
+                    <p class="text-sm text-gray-600">Criar nova avaliação</p>
+                </div>
+            </div>
+        </a>
+        {% endif %}
+        
+        <a href="{{ url_for('distribution.center') }}" 
+           class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
+            <div class="flex items-center">
+                <i data-feather="shuffle" class="h-8 w-8 text-purple-600"></i>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Centro de Distribuição</h3>
+                    <p class="text-sm text-gray-600">Gerenciar procedimentos</p>
+                </div>
+            </div>
+        </a>
+        
+        <a href="{{ url_for('reports.index') }}" 
+           class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
+            <div class="flex items-center">
+                <i data-feather="bar-chart-2" class="h-8 w-8 text-yellow-600"></i>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Relatórios</h3>
+                    <p class="text-sm text-gray-600">Ver estatísticas</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}

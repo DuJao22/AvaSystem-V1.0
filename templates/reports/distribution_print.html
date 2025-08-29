@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Distribuição de Pacientes - Sistema TEA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+                font-size: 11px;
+                line-height: 1.3;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            .print-break {
+                page-break-before: always;
+            }
+            
+            .print-avoid-break {
+                page-break-inside: avoid;
+            }
+            
+            .bg-gray-50 {
+                background-color: #f9fafb !important;
+            }
+            
+            .bg-blue-50 {
+                background-color: #eff6ff !important;
+            }
+            
+            .bg-green-50 {
+                background-color: #f0fdf4 !important;
+            }
+            
+            .bg-yellow-50 {
+                background-color: #fefce8 !important;
+            }
+            
+            .bg-purple-50 {
+                background-color: #faf5ff !important;
+            }
+            
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            
+            th, td {
+                border: 1px solid #d1d5db;
+                padding: 6px 8px;
+                text-align: left;
+                font-size: 10px;
+            }
+            
+            th {
+                background-color: #f3f4f6 !important;
+                font-weight: bold;
+            }
+            
+            .header-info {
+                margin-bottom: 20px;
+                padding: 10px;
+                border: 1px solid #d1d5db;
+                background-color: #f9fafb !important;
+            }
+            
+            .summary-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+            
+            .summary-card {
+                padding: 8px;
+                border: 1px solid #d1d5db;
+                text-align: center;
+                background-color: #ffffff !important;
+            }
+            
+            .stats-by-specialty {
+                margin-top: 20px;
+            }
+            
+            .specialty-section {
+                margin-bottom: 25px;
+                page-break-inside: avoid;
+            }
+            
+            .specialty-header {
+                background-color: #f3f4f6 !important;
+                padding: 8px;
+                border: 1px solid #d1d5db;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+        }
+        
+        @media screen {
+            body {
+                max-width: 210mm;
+                margin: 0 auto;
+                padding: 20px;
+                background: #f5f5f5;
+            }
+            
+            .page {
+                background: white;
+                padding: 1.5cm;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-white">
+    <div class="page">
+        <!-- Cabeçalho do Relatório -->
+        <div class="header-info print-avoid-break">
+            <div class="text-center mb-4">
+                <h1 class="text-xl font-bold text-gray-900">CLÍNICA TEA</h1>
+                <h2 class="text-lg font-semibold text-gray-700">Relatório de Distribuição de Pacientes</h2>
+                <p class="text-sm text-gray-600">Gerado em: {{ current_date.strftime('%d/%m/%Y às %H:%M') }}</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <strong>Filtros Aplicados:</strong><br>
+                    {% if filters.especialidade %}
+                    Especialidade: {{ filters.especialidade }}<br>
+                    {% endif %}
+                    {% if filters.estado %}
+                    Estado: {{ filters.estado }}<br>
+                    {% endif %}
+                    {% if not filters.especialidade and not filters.estado %}
+                    Todos os procedimentos<br>
+                    {% endif %}
+                </div>
+                <div>
+                    <strong>Total de Registros:</strong> {{ procedures|length }}<br>
+                    <strong>Relatório por:</strong> {{ user_name or 'Sistema' }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumo Estatístico -->
+        <div class="summary-grid print-avoid-break">
+            {% set stats_summary = {
+                'pendente': procedures|selectattr('estado', 'equalto', 'pendente')|list|length,
+                'alocado': procedures|selectattr('estado', 'equalto', 'alocado')|list|length,
+                'em_atendimento': procedures|selectattr('estado', 'equalto', 'em_atendimento')|list|length,
+                'concluido': procedures|selectattr('estado', 'equalto', 'concluido')|list|length
+            } %}
+            
+            <div class="summary-card bg-yellow-50">
+                <div class="text-lg font-bold text-yellow-800">{{ stats_summary.pendente }}</div>
+                <div class="text-xs text-yellow-700">Pendente</div>
+            </div>
+            <div class="summary-card bg-blue-50">
+                <div class="text-lg font-bold text-blue-800">{{ stats_summary.alocado }}</div>
+                <div class="text-xs text-blue-700">Alocado</div>
+            </div>
+            <div class="summary-card bg-purple-50">
+                <div class="text-lg font-bold text-purple-800">{{ stats_summary.em_atendimento }}</div>
+                <div class="text-xs text-purple-700">Em Atendimento</div>
+            </div>
+            <div class="summary-card bg-green-50">
+                <div class="text-lg font-bold text-green-800">{{ stats_summary.concluido }}</div>
+                <div class="text-xs text-green-700">Concluído</div>
+            </div>
+        </div>
+
+        <!-- Lista de Distribuição de Pacientes -->
+        {% if procedures %}
+        <div class="print-avoid-break">
+            <h3 class="text-base font-semibold text-gray-900 mb-4">Distribuição de Pacientes por Especialidade</h3>
+            
+            <div class="space-y-3">
+                {% for procedure in procedures %}
+                <div class="flex items-center justify-between p-3 {% if loop.index % 2 == 0 %}bg-gray-50{% endif %} border rounded">
+                    <div class="flex-1">
+                        <span class="font-medium text-gray-900">{{ loop.index }}. </span>
+                        <span class="font-medium text-gray-900">{{ procedure.paciente_nome or 'Paciente não identificado' }}</span>
+                        {% if procedure.paciente_cpf %}
+                        <span class="text-gray-600 text-sm">(CPF: {{ procedure.paciente_cpf }})</span>
+                        {% endif %}
+                        <span class="text-gray-700"> está em </span>
+                        <span class="font-semibold text-blue-700">{{ procedure.especialidade or 'especialidade não definida' }}</span>
+                        
+                        <!-- Estado do procedimento -->
+                        {% if procedure.estado == 'pendente' %}
+                        <span class="text-yellow-700"> - aguardando alocação</span>
+                        {% elif procedure.estado == 'alocado' %}
+                        <span class="text-blue-700"> - alocado para 
+                            {% if procedure.medico_nome %}
+                                Dr(a). {{ procedure.medico_nome }}
+                            {% else %}
+                                médico não identificado
+                            {% endif %}
+                        </span>
+                        {% elif procedure.estado == 'em_atendimento' %}
+                        <span class="text-purple-700"> - em atendimento com 
+                            {% if procedure.medico_nome %}
+                                Dr(a). {{ procedure.medico_nome }}
+                            {% else %}
+                                médico não identificado
+                            {% endif %}
+                        </span>
+                        {% elif procedure.estado == 'concluido' %}
+                        <span class="text-green-700"> - atendimento concluído</span>
+                        {% endif %}
+                        
+                        <!-- Data de atualização -->
+                        {% if procedure.atualizado_em %}
+                        <span class="text-gray-500 text-sm"> (atualizado em 
+                            {{ procedure.atualizado_em.strftime('%d/%m/%Y') if procedure.atualizado_em.strftime else procedure.atualizado_em.split(' ')[0] }})</span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Badge do estado -->
+                    <div class="ml-4">
+                        <span class="px-3 py-1 text-xs rounded-full font-medium
+                            {% if procedure.estado == 'pendente' %}bg-yellow-100 text-yellow-800
+                            {% elif procedure.estado == 'alocado' %}bg-blue-100 text-blue-800
+                            {% elif procedure.estado == 'em_atendimento' %}bg-purple-100 text-purple-800
+                            {% elif procedure.estado == 'concluido' %}bg-green-100 text-green-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ procedure.get_state_display() }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        {% else %}
+        <div class="print-avoid-break text-center py-8">
+            <h3 class="text-base font-semibold text-gray-900 mb-2">Nenhum procedimento encontrado</h3>
+            <p class="text-gray-600">Não há procedimentos de distribuição para exibir no momento.</p>
+        </div>
+        {% endif %}
+
+        <!-- Estatísticas por Especialidade -->
+        {% if specialty_stats %}
+        <div class="stats-by-specialty print-break">
+            <h3 class="text-base font-semibold text-gray-900 mb-3">Estatísticas por Especialidade</h3>
+            
+            {% for specialty, stats in specialty_stats.items() %}
+            <div class="specialty-section">
+                <div class="specialty-header">
+                    {{ specialty }} - Total: {{ stats.total }} procedimentos
+                </div>
+                <div class="grid grid-cols-4 gap-2 text-sm">
+                    <div class="bg-yellow-50 p-2 border">
+                        <div class="font-semibold">{{ stats.pendente }}</div>
+                        <div class="text-xs">Pendente</div>
+                    </div>
+                    <div class="bg-blue-50 p-2 border">
+                        <div class="font-semibold">{{ stats.alocado }}</div>
+                        <div class="text-xs">Alocado</div>
+                    </div>
+                    <div class="bg-purple-50 p-2 border">
+                        <div class="font-semibold">{{ stats.em_atendimento }}</div>
+                        <div class="text-xs">Em Atendimento</div>
+                    </div>
+                    <div class="bg-green-50 p-2 border">
+                        <div class="font-semibold">{{ stats.concluido }}</div>
+                        <div class="text-xs">Concluído</div>
+                    </div>
+                </div>
+                {% if stats.total > 0 %}
+                <div class="mt-2 text-xs">
+                    <div class="flex justify-between mb-1">
+                        <span>Progresso de Conclusão:</span>
+                        <span>{{ ((stats.concluido / stats.total) * 100) | round(1) }}%</span>
+                    </div>
+                    <div class="bg-gray-200 rounded-full h-2">
+                        <div class="bg-green-600 h-2 rounded-full" 
+                             style="width: {{ ((stats.concluido / stats.total) * 100) | round(1) }}%"></div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Rodapé -->
+        <div class="mt-8 pt-4 border-t border-gray-300 text-xs text-gray-600 print-avoid-break">
+            <div class="flex justify-between">
+                <div>
+                    <strong>Sistema TEA - Clínica de Avaliações</strong><br>
+                    Relatório gerado automaticamente pelo sistema
+                </div>
+                <div class="text-right">
+                    Página 1<br>
+                    {{ current_date.strftime('%d/%m/%Y às %H:%M') }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Botões de Ação (apenas na tela) -->
+        <div class="no-print mt-6 flex justify-center space-x-4">
+            <button onclick="window.print()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                <i class="feather-icon-printer mr-2"></i>
+                Imprimir Relatório
+            </button>
+            <button onclick="window.close()" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                Fechar
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Auto-print quando a página carregar (opcional)
+        // window.addEventListener('load', function() {
+        //     setTimeout(function() {
+        //         window.print();
+        //     }, 1000);
+        // });
+    </script>
+</body>
+</html>

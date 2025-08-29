@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios - Sistema TEA{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Relatórios</h1>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {% set total_procedures = specialty_stats.values() | sum(attribute='total') %}
+        {% set total_pending = specialty_stats.values() | sum(attribute='pendente') %}
+        {% set total_allocated = specialty_stats.values() | sum(attribute='alocado') %}
+        {% set total_completed = specialty_stats.values() | sum(attribute='concluido') %}
+        
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="clipboard" class="h-6 w-6 text-gray-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total de Procedimentos</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ total_procedures }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="clock" class="h-6 w-6 text-yellow-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Pendentes</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ total_pending }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="users" class="h-6 w-6 text-blue-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Alocados</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ total_allocated }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="check-circle" class="h-6 w-6 text-green-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Concluídos</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ total_completed }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="bar-chart" class="h-8 w-8 text-blue-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <h3 class="text-lg font-medium text-gray-900">Relatório por Especialidades</h3>
+                        <p class="mt-1 text-sm text-gray-500">
+                            Visualize estatísticas detalhadas de procedimentos por especialidade
+                        </p>
+                    </div>
+                </div>
+                <div class="mt-5">
+                    <div class="flex space-x-3">
+                        <a href="{{ url_for('reports.specialties') }}" 
+                           class="btn-primary">
+                            Ver Relatório
+                        </a>
+                        <a href="{{ url_for('reports.export_specialties_csv') }}" 
+                           class="btn-secondary">
+                            <i data-feather="download" class="w-4 h-4 mr-2"></i>
+                            Exportar CSV
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="user-check" class="h-8 w-8 text-green-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <h3 class="text-lg font-medium text-gray-900">Relatório por Médicos</h3>
+                        <p class="mt-1 text-sm text-gray-500">
+                            Acompanhe o desempenho e carga de trabalho por médico
+                        </p>
+                    </div>
+                </div>
+                <div class="mt-5">
+                    <div class="flex space-x-3">
+                        <a href="{{ url_for('reports.doctors') }}" 
+                           class="btn-primary">
+                            Ver Relatório
+                        </a>
+                        <a href="{{ url_for('reports.export_doctors_csv') }}" 
+                           class="btn-secondary">
+                            <i data-feather="download" class="w-4 h-4 mr-2"></i>
+                            Exportar CSV
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg border-2 border-blue-200">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="printer" class="h-8 w-8 text-blue-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <h3 class="text-lg font-medium text-gray-900">Relatório de Distribuição A4</h3>
+                        <p class="mt-1 text-sm text-gray-500">
+                            Gere e imprima relatório completo de distribuição de pacientes em formato A4
+                        </p>
+                    </div>
+                </div>
+                <div class="mt-5">
+                    <div class="flex space-x-3">
+                        <a href="{{ url_for('reports.distribution_print') }}" target="_blank"
+                           class="btn-primary">
+                            <i data-feather="printer" class="w-4 h-4 mr-2"></i>
+                            Imprimir Relatório
+                        </a>
+                        <a href="{{ url_for('reports.distribution_print') }}?especialidade=" 
+                           onclick="this.href += prompt('Digite a especialidade (opcional):') || ''"
+                           target="_blank"
+                           class="btn-secondary">
+                            <i data-feather="filter" class="w-4 h-4 mr-2"></i>
+                            Filtrar e Imprimir
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Specialty Overview -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Visão Geral por Especialidade</h3>
+                <a href="{{ url_for('reports.export_procedures_csv') }}" 
+                   class="btn-secondary">
+                    <i data-feather="download" class="w-4 h-4 mr-2"></i>
+                    Exportar Todos os Procedimentos
+                </a>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for specialty, stats in specialty_stats.items() %}
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <h4 class="text-lg font-medium text-gray-900 mb-3">{{ specialty }}</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Pendente</span>
+                            <span class="badge bg-yellow-100 text-yellow-800">{{ stats.pendente }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Alocado</span>
+                            <span class="badge bg-blue-100 text-blue-800">{{ stats.alocado }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Em Atendimento</span>
+                            <span class="badge bg-purple-100 text-purple-800">{{ stats.em_atendimento }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Concluído</span>
+                            <span class="badge bg-green-100 text-green-800">{{ stats.concluido }}</span>
+                        </div>
+                        <div class="border-t pt-2 mt-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-gray-900">Total</span>
+                                <span class="text-sm font-medium text-gray-900">{{ stats.total }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    {% if stats.total > 0 %}
+                    <div class="mt-4">
+                        <div class="text-xs text-gray-600 mb-1">Progresso</div>
+                        <div class="bg-gray-200 rounded-full h-2">
+                            {% set completed_percent = (stats.concluido / stats.total * 100) | round %}
+                            <div class="bg-green-600 h-2 rounded-full" style="width: {{ completed_percent }}%"></div>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">{{ completed_percent }}% concluído</div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                
+                {% if not specialty_stats %}
+                <div class="col-span-full text-center py-6">
+                    <i data-feather="bar-chart" class="mx-auto h-12 w-12 text-gray-400"></i>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhum dado encontrado</h3>
+                    <p class="mt-1 text-sm text-gray-500">
+                        Não há procedimentos registrados no sistema.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

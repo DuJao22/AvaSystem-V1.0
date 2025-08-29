@@ -1,0 +1,270 @@
+PROMPT: Sistema de Registro de Avaliações – Clínica TEA (Flask + HTML5 + Tailwind + SQLite3/SQLiteCloud + Jinja)
+
+Quero que você gere um sistema web completo, pronto para rodar, para registro, distribuição e gestão de avaliações de uma clínica TEA. O sistema deve ser feito exclusivamente com Python (Flask), HTML5, TailwindCSS, Jinja e SQLite3 (com possibilidade simples de alternar para SQLiteCloud por variável de ambiente). Não usar SQLAlchemy; usar a biblioteca padrão sqlite3.
+Todo o crédito de criação deve ser atribuído a “João Layon” no rodapé do site, no README e nos comentários principais dos arquivos.
+
+Objetivo do sistema
+
+Registrar avaliações de pacientes por médicos de diferentes especialidades.
+
+Indicar terapias recomendadas (ex.: Fonoaudiologia, Psicologia, Terapia Ocupacional, etc.).
+
+Operar um Centro de Distribuição onde:
+
+Lista todos os pacientes com suas necessidades de procedimentos.
+
+Permite médicos “puxarem” um paciente para sua equipe por procedimento/especialidade.
+
+Bloqueia que outro médico da mesma especialidade puxe esse paciente enquanto o vínculo estiver ativo.
+
+Exibir relatórios de distribuição por especialidade (quantos pacientes em cada, status, médicos responsáveis).
+
+Camadas de autenticação e perfis (Admin, Médico, Coordenação/Recepção).
+
+Regras de Negócio e Fluxos
+
+Cadastro da Avaliação:
+
+Campos: nome completo, CPF, data de nascimento, local da avaliação, telefone, especialidade do médico que avaliou, data/hora, observações.
+
+Ao salvar, o médico seleciona terapias recomendadas (multi-seleção entre: Fonoaudiologia, Psicologia, Terapia Ocupacional, Fisioterapia, Musicoterapia, Pedagogia/ABA, etc.).
+
+Centro de Distribuição:
+
+Tabela/kanban que mostra cada paciente e os procedimentos pendentes.
+
+Ação “Puxar para minha equipe” por procedimento. Ao puxar:
+
+Criar vínculo (paciente + procedimento + médico responsável + data).
+
+Impedir que outro médico da mesma especialidade puxe o mesmo procedimento do mesmo paciente enquanto houver vínculo ativo.
+
+Permitir devolver/liberar o paciente do procedimento, com motivo.
+
+Relatórios:
+
+Painel com contadores e gráficos simples (pode ser HTML com números + barras simples em CSS) por especialidade:
+
+Total de pacientes por especialidade.
+
+Quantos “pendentes de alocação”, “alocados”, “concluídos/alta”.
+
+Exportar CSV dos relatórios.
+
+Estados de cada procedimento por paciente: pendente, alocado, em_atendimento, concluído.
+
+Auditoria:
+
+Registrar em tabela logs de: criação de avaliação, recomendações alteradas, puxar/devolver paciente, mudança de estado, login/logout.
+
+Regras de conflito/concorrência:
+
+Ao clicar em “puxar”, faça verificação transacional no banco (BEGIN IMMEDIATE) para garantir exclusividade por (paciente_id, especialidade).
+
+Busca e filtros:
+
+Buscar por nome, CPF, telefone.
+
+Filtros por especialidade, estado, médico responsável, datas.
+
+Perfis e Permissões (RBAC simples)
+
+Admin: gerencia usuários, especialidades, locais de avaliação, parâmetros, vê tudo.
+
+Médico: cria avaliações, recomenda terapias, puxa/devolve pacientes, atualiza estados apenas dos seus procedimentos.
+
+Coordenação/Recepção: cadastra pacientes, agenda/lança avaliações, visualiza centro de distribuição, não puxa, mas pode liberar com justificativa administrativa.
+
+Páginas e Funcionalidades
+
+Login/Logout (Flask-Login opcional, mas sem ORM): sessão com hash seguro (Werkzeug).
+
+Dashboard (cards com métricas: pacientes totais, pendentes por especialidade, alocados, concluições na semana).
+
+Pacientes
+
+Listar/Buscar/Filtrar.
+
+Cadastrar/Editar (nome, CPF, data nascimento, telefone, local).
+
+Visualizar prontuário simples (avaliações, terapias, vínculos por especialidade, histórico).
+
+Avaliações
+
+Nova avaliação: selecionar médico (o logado), local, data/hora, recomendações (checkbox), observações.
+
+Lista de avaliações com filtros por período, médico, especialidade.
+
+Centro de Distribuição
+
+Visão tabela e visão “cards/kanban” por especialidade.
+
+Ações: “Puxar para minha equipe”, “Devolver/Liberação”, “Marcar em atendimento”, “Concluir”.
+
+Relatórios
+
+Por especialidade: totais, pendentes, alocados, concluídos.
+
+Por médico: quantos pacientes por procedimento.
+
+Exportar CSV.
+
+Admin
+
+Usuários (nome, e-mail, perfil, especialidade opcional).
+
+Catálogo de Especialidades e Locais de Avaliação.
+
+Parâmetros (ex.: ativar SQLiteCloud, BANCO_URL).
+
+Rodapé em todas as páginas: “Sistema criado por João Layon”.
+
+Banco de Dados (SQLite3 puro; arquivo instance/app.db)
+
+Criar scripts de migração inicial (DDL) e seed. Tabelas sugeridas:
+
+users(id, nome, email, senha_hash, perfil [admin|medico|coordenacao], especialidade, ativo, criado_em)
+
+pacientes(id, nome, cpf, data_nascimento, telefone, local_referencia, criado_em) com índices em cpf e nome.
+
+avaliacoes(id, paciente_id, medico_id, especialidade, local, observacoes, criado_em)
+
+avaliacao_terapias(id, avaliacao_id, terapia) (multivalorada).
+
+procedimentos(id, paciente_id, especialidade, estado [pendente|alocado|em_atendimento|concluido], medico_responsavel_id NULL, criado_em, atualizado_em)
+
+Ao criar avaliação, gerar ou atualizar registros procedimentos conforme terapias recomendadas.
+
+auditoria(id, user_id, acao, detalhe, criado_em)
+
+Índices essenciais para buscas e travas lógicas (compostos em procedimentos(paciente_id, especialidade)).
+
+Regras de Exclusividade (lock lógico)
+
+Ao puxar: checar se existe procedimentos do paciente_id + especialidade com estado IN ('alocado','em_atendimento'). Se existir, bloquear e alertar.
+
+Usar transação BEGIN IMMEDIATE para evitar condições de corrida.
+
+Interface (UI/UX)
+
+TailwindCSS via CDN (pode incluir build opcional).
+
+Tema claro, limpo, com foco em legibilidade.
+
+Layout responsivo (mobile-first).
+
+Componentes:
+
+Tabelas com paginação simples.
+
+Badges para estados (pendente, alocado, em_atendimento, concluído).
+
+Botões claros “Puxar”, “Devolver”, “Concluir”.
+
+Formulários com validação (HTML5 + validação servidor).
+
+Acessibilidade: labels, contrastes, foco visível, atalhos simples.
+
+i18n básico: pt-BR (strings em pt-BR).
+
+Segurança
+
+Senhas com werkzeug.security (hash/salt).
+
+Proteção CSRF (Flask-WTF ou token manual simples).
+
+Rate limit básico no login (por IP em memória).
+
+Sanitização de inputs e uso de parâmetros nas queries sqlite3 (placeholder ?).
+
+Estrutura do Projeto
+
+app.py (factory + blueprints).
+
+config.py (ENV, SECRET_KEY, DB_URL com fallback para SQLite local e opção de SQLiteCloud).
+
+/instance/app.db (auto-criado).
+
+models/ (DAO com funções sqlite3 para CRUD).
+
+routes/ (blueprints: auth, pacientes, avaliacoes, distribuicao, relatorios, admin).
+
+templates/ (Jinja: base, partials, páginas listadas acima).
+
+static/ (Tailwind, favicon, logo simples).
+
+scripts/ (init_db.py, seed.py).
+
+tests/ (teste de rotas críticas e regras de exclusividade).
+
+README.md (passo a passo).
+
+LICENSE (incluir crédito explícito a João Layon).
+
+requirements.txt (Flask, Flask-WTF opcional, python-dotenv, passlib/werkzeug, etc. sem ORM).
+
+Procfile/wsgi.py opcional para deploy.
+
+Endpoints (sugestão)
+
+Auth: /login, /logout.
+
+Pacientes: /pacientes, /pacientes/novo, /pacientes/<id>, /pacientes/<id>/editar.
+
+Avaliações: /avaliacoes, /avaliacoes/nova, /avaliacoes/<id>.
+
+Centro de Distribuição: /distribuicao (lista/kanban), POST /distribuicao/puxar, POST /distribuicao/devolver, POST /distribuicao/alterar-estado.
+
+Relatórios: /relatorios/especialidades, /relatorios/medicos, /relatorios/export.csv.
+
+Admin: /admin/usuarios, /admin/especialidades, /admin/locais, /admin/parametros.
+
+Critérios de Aceite
+
+Conseguir cadastrar paciente, lancar avaliação com terapias recomendadas e gerar procedimentos pendentes automaticamente.
+
+No Centro de Distribuição, um médico consegue puxar um procedimento para si e outros médicos da mesma especialidade não conseguem puxar o mesmo paciente/procedimento enquanto ativo.
+
+Conseguir devolver um procedimento com motivo.
+
+Relatório por especialidade mostra contagens e permite exportar CSV.
+
+Busca e filtros funcionam conforme descrito.
+
+Crédito “Sistema criado por João Layon” visível no rodapé e nos metadados.
+
+Dados de Demonstração (seed)
+
+Usuários: 1 admin, 3 médicos (Fono, Psicologia, TO), 1 coordenação.
+
+Pacientes: 10 fictícios.
+
+Avaliações: gerar 15 com combinações de terapias.
+
+Procedimentos: gerar pendentes e alguns já alocados para testar bloqueios.
+
+Deploy e Execução
+
+Instruções no README para:
+
+python -m venv venv && pip install -r requirements.txt
+
+python scripts/init_db.py && python scripts/seed.py
+
+flask run
+
+Variável DB_URL para alternar entre sqlite:///instance/app.db e SQLiteCloud (ex.: sqlitecloud://...).
+
+.env exemplo com SECRET_KEY, DB_URL.
+
+Observações finais
+
+Não incluir nenhuma outra tecnologia além das solicitadas.
+
+Não usar SQLAlchemy.
+
+Escrever código organizado, comentado e modular, com docstrings.
+
+Garantir testes mínimos (rotas de puxar/devolver e exclusividade).
+
+Rodapé e README devem citar explicitamente: “Sistema criado por João Layon”.

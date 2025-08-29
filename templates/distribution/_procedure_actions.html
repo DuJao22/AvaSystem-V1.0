@@ -1,0 +1,52 @@
+<!-- Procedure Actions Partial -->
+{% if procedure.estado == 'pendente' %}
+    {% if session.user_perfil == 'medico' and session.user_especialidade == procedure.especialidade %}
+    <form method="POST" action="{{ url_for('distribution.pull_patient') }}" class="inline">
+        <input type="hidden" name="procedure_id" value="{{ procedure.id }}">
+        <button type="submit" class="btn-primary text-xs py-1 px-2">
+            <i data-feather="user-plus" class="w-3 h-3 mr-1"></i>
+            Puxar
+        </button>
+    </form>
+    {% endif %}
+
+{% elif procedure.estado in ['alocado', 'em_atendimento'] %}
+    {% if session.user_perfil == 'medico' and procedure.medico_responsavel_id == session.user_id %}
+    <!-- State change actions for doctor's own procedures -->
+    {% if procedure.estado == 'alocado' %}
+    <form method="POST" action="{{ url_for('distribution.change_state') }}" class="inline">
+        <input type="hidden" name="procedure_id" value="{{ procedure.id }}">
+        <input type="hidden" name="new_state" value="em_atendimento">
+        <button type="submit" class="btn-primary text-xs py-1 px-2">
+            <i data-feather="play" class="w-3 h-3 mr-1"></i>
+            Iniciar
+        </button>
+    </form>
+    {% endif %}
+    
+    {% if procedure.estado == 'em_atendimento' %}
+    <form method="POST" action="{{ url_for('distribution.change_state') }}" class="inline">
+        <input type="hidden" name="procedure_id" value="{{ procedure.id }}">
+        <input type="hidden" name="new_state" value="concluido">
+        <button type="submit" class="btn-success text-xs py-1 px-2">
+            <i data-feather="check" class="w-3 h-3 mr-1"></i>
+            Concluir
+        </button>
+    </form>
+    {% endif %}
+    
+    <button type="button" onclick="openReleaseModal({{ procedure.id }})" 
+            class="btn-danger text-xs py-1 px-2">
+        <i data-feather="x" class="w-3 h-3 mr-1"></i>
+        Devolver
+    </button>
+    
+    {% elif session.user_perfil == 'coordenacao' %}
+    <!-- Coordination can release any procedure -->
+    <button type="button" onclick="openReleaseModal({{ procedure.id }})" 
+            class="btn-danger text-xs py-1 px-2">
+        <i data-feather="x" class="w-3 h-3 mr-1"></i>
+        Liberar
+    </button>
+    {% endif %}
+{% endif %}

@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Perfil - Sistema TEA{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="sm:flex sm:items-center">
+        <div class="sm:flex-auto">
+            <h1 class="text-2xl font-semibold text-gray-900">Editar Perfil</h1>
+            <p class="mt-2 text-sm text-gray-700">
+                Atualize suas informações pessoais e foto de perfil
+            </p>
+        </div>
+        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+            <a href="{{ url_for('profile.index') }}" 
+               class="btn-secondary">
+                <i data-feather="arrow-left" class="w-4 h-4 mr-2"></i>
+                Voltar
+            </a>
+        </div>
+    </div>
+
+    <!-- Edit Form -->
+    <div class="mt-8 bg-white shadow sm:rounded-lg">
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            <div class="px-4 py-5 sm:p-6">
+                <!-- Current Photo -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700">
+                        Foto Atual
+                    </label>
+                    <div class="mt-2 flex items-center">
+                        {% if user.foto_perfil %}
+                            <img class="h-16 w-16 rounded-full object-cover" 
+                                 src="{{ url_for('static', filename=user.foto_perfil) }}" 
+                                 alt="Foto atual">
+                        {% else %}
+                            <div class="h-16 w-16 rounded-full bg-gray-300 flex items-center justify-center">
+                                <i data-feather="user" class="w-8 h-8 text-gray-600"></i>
+                            </div>
+                        {% endif %}
+                        <span class="ml-4 text-sm text-gray-500">
+                            {% if user.foto_perfil %}
+                                Foto de perfil atual
+                            {% else %}
+                                Nenhuma foto definida
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Photo Upload -->
+                <div class="mb-6">
+                    <label for="foto_perfil" class="block text-sm font-medium text-gray-700">
+                        Nova Foto de Perfil
+                    </label>
+                    <div class="mt-2">
+                        <input type="file" 
+                               name="foto_perfil" 
+                               id="foto_perfil"
+                               accept="image/*"
+                               class="block w-full text-sm text-gray-500
+                                      file:mr-4 file:py-2 file:px-4
+                                      file:rounded-md file:border-0
+                                      file:text-sm file:font-medium
+                                      file:bg-blue-50 file:text-blue-700
+                                      hover:file:bg-blue-100">
+                        <p class="mt-2 text-xs text-gray-500">
+                            PNG, JPG, JPEG ou GIF. Máximo 5MB.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Name -->
+                <div class="mb-6">
+                    <label for="nome" class="block text-sm font-medium text-gray-700">
+                        Nome Completo <span class="text-red-500">*</span>
+                    </label>
+                    <div class="mt-2">
+                        <input type="text" 
+                               name="nome" 
+                               id="nome" 
+                               value="{{ user.nome }}" 
+                               required
+                               class="form-input">
+                    </div>
+                </div>
+
+                <!-- Email (Read-only) -->
+                <div class="mb-6">
+                    <label for="email" class="block text-sm font-medium text-gray-700">
+                        Email
+                    </label>
+                    <div class="mt-2">
+                        <input type="email" 
+                               name="email" 
+                               id="email" 
+                               value="{{ user.email }}" 
+                               readonly
+                               class="form-input bg-gray-50 text-gray-500 cursor-not-allowed">
+                        <p class="mt-2 text-xs text-gray-500">
+                            O email não pode ser alterado. Entre em contato com o administrador se necessário.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Profile Type (Read-only) -->
+                <div class="mb-6">
+                    <label for="perfil" class="block text-sm font-medium text-gray-700">
+                        Perfil de Acesso
+                    </label>
+                    <div class="mt-2">
+                        <input type="text" 
+                               name="perfil" 
+                               id="perfil" 
+                               value="{{ user.perfil.title() }}" 
+                               readonly
+                               class="form-input bg-gray-50 text-gray-500 cursor-not-allowed">
+                    </div>
+                </div>
+
+                <!-- Specialty (Read-only if applicable) -->
+                {% if user.especialidade %}
+                <div class="mb-6">
+                    <label for="especialidade" class="block text-sm font-medium text-gray-700">
+                        Especialidade
+                    </label>
+                    <div class="mt-2">
+                        <input type="text" 
+                               name="especialidade" 
+                               id="especialidade" 
+                               value="{{ user.especialidade }}" 
+                               readonly
+                               class="form-input bg-gray-50 text-gray-500 cursor-not-allowed">
+                        <p class="mt-2 text-xs text-gray-500">
+                            A especialidade não pode ser alterada. Entre em contato com o administrador se necessário.
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Form Actions -->
+            <div class="px-4 py-3 bg-gray-50 text-right sm:px-6 space-x-3">
+                <a href="{{ url_for('profile.index') }}" 
+                   class="btn-secondary">
+                    Cancelar
+                </a>
+                <button type="submit" class="btn-primary">
+                    <i data-feather="save" class="w-4 h-4 mr-2"></i>
+                    Salvar Alterações
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Preview image before upload
+document.getElementById('foto_perfil').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // You could add image preview functionality here
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+{% endblock %}

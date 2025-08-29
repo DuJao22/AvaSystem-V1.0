@@ -1,0 +1,164 @@
+Sistema Perfeito de Controle de Pacientes Neuropsicológicos
+
+Quero que você desenvolva um sistema web completo para gestão de pacientes em uma clínica de Neuropsicologia, cobrindo todas as carências e necessidades do fluxo clínico, administrativo e financeiro.
+
+⚙️ Requisitos Técnicos
+
+Framework: Flask (Python) com arquitetura modular baseada em Blueprints.
+
+Banco de Dados: SQLiteCloud como padrão, mas com arquitetura flexível para alternar facilmente entre SQLite local e SQLiteCloud.
+
+Autenticação: Sistema baseado em sessões com papéis de usuário (admin, médico, equipe/admin de equipe, paciente).
+
+Templates: Jinja2 com Bootstrap 5 para responsividade e design moderno.
+
+Armazenamento de Arquivos: Sistema de upload seguro para PDFs (laudos, relatórios), armazenados no servidor em /uploads.
+
+Segurança:
+
+Hash de senhas com Werkzeug.
+
+Expiração automática de sessão.
+
+2FA opcional para administradores.
+
+Controle de acesso baseado em função.
+
+👥 Tipos de Usuário
+
+Administrador Geral
+
+Gerencia médicos, equipes e pacientes.
+
+Aprova serviços/consultas e libera laudos.
+
+Controla fluxo financeiro e relatórios.
+
+Acompanha confirmações de agendamento.
+
+Médico
+
+Cadastra pacientes (nome, CPF, carteirinha, WhatsApp, localização).
+
+Agenda consultas e registra observações.
+
+Registra tipo de serviço (consulta R$80 ou teste neuropsicológico R$800), sem visualizar valores.
+
+Faz upload de laudos.
+
+Admin de Equipe
+
+Gerencia médicos de sua equipe.
+
+Visualiza pacientes e faturamento da equipe.
+
+Controla porcentagens de repasse da equipe.
+
+Paciente
+
+Login via CPF.
+
+Consulta histórico de sessões e documentos.
+
+Recebe notificações e confirma consultas.
+
+Pode visualizar status das senhas/autorização do convênio.
+
+📋 Funcionalidades Principais
+1. Cadastro Simplificado
+
+Paciente: nome, CPF (único), carteirinha, WhatsApp, localização.
+
+Médico: nome, CRM, equipe, especialidade.
+
+Equipe: nome da equipe, porcentagem de participação.
+
+2. Agendamentos
+
+Médico agenda consulta com data, hora e observações.
+
+Sistema habilita confirmação pelo paciente 1 dia antes.
+
+Paciente pode confirmar ou cancelar (com justificativa).
+
+Histórico de consultas mantido.
+
+3. Serviços e Sessões
+
+Separar criação da sessão (com data/observações) de tipo de serviço.
+
+Tipos fixos:
+
+Teste Neuropsicológico → R$800.
+
+Consulta → R$80.
+
+Médicos não veem valores.
+
+4. Aprovação de Senhas (Convênios)
+
+Cada atendimento exige senha de convênio.
+
+Dois níveis de aprovação:
+
+Consulta.
+
+Teste neuropsicológico.
+
+Admin aprova senhas antes de liberar faturamento e laudo.
+
+5. Laudos e Documentos
+
+Médico faz upload do laudo em PDF.
+
+Laudo só é liberado ao paciente após ambas as senhas estarem aprovadas.
+
+Paciente pode baixar apenas seus documentos.
+
+6. Financeiro
+
+Clínica recebe diretamente do convênio.
+
+Equipes recebem % do valor → repassam internamente aos médicos.
+
+Médicos externos recebem por sessão (mínimo garantido de 8 sessões).
+
+Dashboards com:
+
+Receita clínica.
+
+Receita por equipe.
+
+Receita por médico externo.
+
+Relatórios exportáveis (PDF/Excel).
+
+7. Notificações
+
+Sistema envia aviso automático (WhatsApp/Email) para pacientes confirmarem consulta.
+
+Médicos e admins recebem notificações de cancelamentos.
+
+8. Auditoria
+
+Toda ação crítica (cadastro, edição, aprovação, liberação de laudo) registrada em tabela auditoria.
+
+Registro de usuário, data, hora e ação.
+
+📊 Dashboards
+
+Admin: visão geral de pacientes, médicos, equipes, faturamento, consultas confirmadas/canceladas.
+
+Médico: agenda pessoal, pacientes ativos, progresso de sessões (1 a 8).
+
+Equipe: faturamento da equipe, desempenho de médicos.
+
+Paciente: próximos atendimentos, documentos disponíveis, status de senhas.
+
+🔮 Escalabilidade & Futuro
+
+Estrutura pronta para migração para API REST/GraphQL caso seja necessário aplicativo mobile.
+
+Possibilidade de integrar IA para análise de dados (taxa de faltas, previsões de agendamentos).
+
+Integração futura com teleconsulta (vídeo) diretamente no sistema.

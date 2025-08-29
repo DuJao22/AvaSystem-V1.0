@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Meu Perfil - Sistema TEA{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="sm:flex sm:items-center">
+        <div class="sm:flex-auto">
+            <h1 class="text-2xl font-semibold text-gray-900">Meu Perfil</h1>
+            <p class="mt-2 text-sm text-gray-700">
+                Visualize e edite suas informações pessoais
+            </p>
+        </div>
+        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+            <a href="{{ url_for('profile.edit') }}" 
+               class="btn-primary">
+                <i data-feather="edit-2" class="w-4 h-4 mr-2"></i>
+                Editar Perfil
+            </a>
+        </div>
+    </div>
+
+    <!-- Profile Card -->
+    <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6">
+            <div class="flex items-center">
+                <!-- Profile Photo -->
+                <div class="flex-shrink-0">
+                    {% if user.foto_perfil %}
+                        <img class="h-20 w-20 rounded-full object-cover" 
+                             src="{{ url_for('static', filename=user.foto_perfil) }}" 
+                             alt="Foto de {{ user.nome }}">
+                    {% else %}
+                        <div class="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center">
+                            <i data-feather="user" class="w-10 h-10 text-gray-600"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- User Info -->
+                <div class="ml-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        {{ user.nome }}
+                    </h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                        {{ user.perfil.title() }}
+                        {% if user.especialidade %}
+                            • {{ user.especialidade }}
+                        {% endif %}
+                    </p>
+                    <p class="mt-1 text-sm text-gray-500">
+                        {{ user.email }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Profile Details -->
+        <div class="border-t border-gray-200">
+            <dl>
+                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">
+                        Nome Completo
+                    </dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        {{ user.nome }}
+                    </dd>
+                </div>
+                
+                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">
+                        Email
+                    </dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        {{ user.email }}
+                    </dd>
+                </div>
+                
+                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">
+                        Perfil de Acesso
+                    </dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        <span class="badge 
+                            {% if user.perfil == 'admin' %}bg-purple-100 text-purple-800
+                            {% elif user.perfil == 'medico' %}bg-blue-100 text-blue-800
+                            {% else %}bg-green-100 text-green-800{% endif %}">
+                            {{ user.perfil.title() }}
+                        </span>
+                    </dd>
+                </div>
+                
+                {% if user.especialidade %}
+                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">
+                        Especialidade
+                    </dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        {{ user.especialidade }}
+                    </dd>
+                </div>
+                {% endif %}
+            </dl>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="mt-6 flex flex-col sm:flex-row gap-4">
+        <a href="{{ url_for('profile.edit') }}" 
+           class="btn-primary flex-1 justify-center">
+            <i data-feather="edit-2" class="w-4 h-4 mr-2"></i>
+            Editar Informações
+        </a>
+        
+        <a href="{{ url_for('profile.change_password') }}" 
+           class="btn-secondary flex-1 justify-center">
+            <i data-feather="lock" class="w-4 h-4 mr-2"></i>
+            Alterar Senha
+        </a>
+    </div>
+</div>
+{% endblock %}

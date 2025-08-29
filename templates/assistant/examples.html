@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Exemplos - Assistente IA - Sistema TEA{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i data-feather="help-circle" class="w-6 h-6 text-green-600"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Exemplos de Perguntas</h1>
+                    <p class="text-gray-600">Veja como usar o assistente IA da clínica</p>
+                </div>
+            </div>
+            <a href="{{ url_for('assistant.chat') }}" 
+               class="btn-primary">
+                <i data-feather="message-circle" class="w-4 h-4 inline mr-2"></i>
+                Fazer Pergunta
+            </a>
+        </div>
+    </div>
+
+    <!-- Examples by Category -->
+    {% for category in examples %}
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+            {% if category.category == 'Localização de Pacientes' %}
+                <i data-feather="map-pin" class="w-5 h-5 text-blue-600 mr-2"></i>
+            {% elif category.category == 'Avaliações' %}
+                <i data-feather="clipboard" class="w-5 h-5 text-green-600 mr-2"></i>
+            {% elif category.category == 'Médicos e Especialidades' %}
+                <i data-feather="users" class="w-5 h-5 text-purple-600 mr-2"></i>
+            {% endif %}
+            {{ category.category }}
+        </h2>
+        
+        <div class="space-y-3">
+            {% for question in category.questions %}
+            <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition cursor-pointer example-question"
+                 data-question="{{ question }}">
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-800">{{ question }}</span>
+                    <div class="flex items-center space-x-2">
+                        <button class="copy-question text-gray-400 hover:text-blue-600 transition" 
+                                title="Copiar pergunta">
+                            <i data-feather="copy" class="w-4 h-4"></i>
+                        </button>
+                        <i data-feather="arrow-right" class="w-4 h-4 text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Tips Section -->
+    <div class="bg-blue-50 rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-blue-900 mb-3">
+            <i data-feather="lightbulb" class="w-5 h-5 inline mr-2"></i>
+            Dicas para Melhores Resultados
+        </h2>
+        <div class="space-y-2 text-blue-800">
+            <p>• <strong>Seja específico:</strong> Use nomes completos dos pacientes ou médicos</p>
+            <p>• <strong>Use CPF quando possível:</strong> CPF é a forma mais precisa de identificar pacientes</p>
+            <p>• <strong>Pergunte diretamente:</strong> "Onde está João Silva?" ao invés de "Me diga sobre João"</p>
+            <p>• <strong>Uma pergunta por vez:</strong> Faça perguntas simples e diretas</p>
+        </div>
+    </div>
+
+    <!-- Common Scenarios -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mt-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">
+            <i data-feather="book" class="w-5 h-5 text-orange-600 mr-2 inline"></i>
+            Cenários Comuns
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-3">
+                <h3 class="font-medium text-gray-900">Recepção/Coordenação</h3>
+                <div class="space-y-2 text-sm">
+                    <div class="bg-gray-50 p-3 rounded">
+                        <strong>Situação:</strong> Familiar liga perguntando sobre o paciente<br>
+                        <strong>Pergunta:</strong> "Onde está Maria Silva?"<br>
+                        <strong>Resposta esperada:</strong> Status atual e médico responsável
+                    </div>
+                </div>
+            </div>
+            
+            <div class="space-y-3">
+                <h3 class="font-medium text-gray-900">Médicos</h3>
+                <div class="space-y-2 text-sm">
+                    <div class="bg-gray-50 p-3 rounded">
+                        <strong>Situação:</strong> Precisa saber histórico do paciente<br>
+                        <strong>Pergunta:</strong> "Quem avaliou Pedro Santos?"<br>
+                        <strong>Resposta esperada:</strong> Médico que fez a primeira avaliação
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Example question click handlers
+    const exampleQuestions = document.querySelectorAll('.example-question');
+    const copyButtons = document.querySelectorAll('.copy-question');
+    
+    exampleQuestions.forEach(question => {
+        question.addEventListener('click', function(e) {
+            // Don't trigger if copy button was clicked
+            if (e.target.closest('.copy-question')) return;
+            
+            const questionText = this.dataset.question;
+            // Redirect to chat with question pre-filled
+            window.location.href = `{{ url_for('assistant.chat') }}?q=${encodeURIComponent(questionText)}`;
+        });
+    });
+    
+    copyButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            const question = this.closest('.example-question').dataset.question;
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(question).then(function() {
+                // Show feedback
+                const originalIcon = button.innerHTML;
+                button.innerHTML = '<i data-feather="check" class="w-4 h-4"></i>';
+                button.classList.add('text-green-600');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalIcon;
+                    button.classList.remove('text-green-600');
+                    feather.replace();
+                }, 1500);
+                
+                feather.replace();
+            }).catch(function(err) {
+                console.error('Erro ao copiar: ', err);
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

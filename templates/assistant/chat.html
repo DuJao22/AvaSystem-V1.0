@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Assistente IA - Sistema TEA{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i data-feather="message-circle" class="w-6 h-6 text-blue-600"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Assistente IA</h1>
+                    <p class="text-gray-600">Faça perguntas sobre pacientes, médicos e procedimentos</p>
+                </div>
+            </div>
+            <a href="{{ url_for('assistant.examples') }}" 
+               class="btn-secondary">
+                <i data-feather="help-circle" class="w-4 h-4 inline mr-2"></i>
+                Exemplos
+            </a>
+        </div>
+    </div>
+
+    <!-- Chat Interface -->
+    <div class="bg-white rounded-lg shadow-sm">
+        <!-- Chat Messages Area -->
+        <div id="chat-messages" class="p-6 space-y-4 max-h-96 overflow-y-auto">
+            <!-- Welcome message -->
+            <div class="flex items-start space-x-3">
+                <div class="bg-blue-100 p-2 rounded-full flex-shrink-0">
+                    <i data-feather="cpu" class="w-4 h-4 text-blue-600"></i>
+                </div>
+                <div class="bg-blue-50 rounded-lg p-4 max-w-lg">
+                    <p class="text-gray-800">
+                        Olá! Sou seu assistente virtual da clínica TEA, powered by Google Gemini (gratuito). Posso ajudar você a encontrar informações sobre:
+                    </p>
+                    <ul class="mt-2 text-sm text-gray-600 space-y-1">
+                        <li>• Localização atual dos pacientes</li>
+                        <li>• Médicos responsáveis por avaliações</li>
+                        <li>• Status de procedimentos terapêuticos</li>
+                        <li>• Histórico de atendimentos</li>
+                    </ul>
+                    <p class="mt-2 text-sm text-gray-600">
+                        Faça sua pergunta no campo abaixo!
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="border-t p-4">
+            <form id="chat-form" class="flex space-x-3">
+                <input 
+                    type="text" 
+                    id="question-input"
+                    placeholder="Digite sua pergunta... Ex: Onde está o paciente João Silva?"
+                    class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    autocomplete="off"
+                >
+                <button 
+                    type="submit" 
+                    id="send-button"
+                    class="btn-primary flex items-center"
+                >
+                    <i data-feather="send" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quick Questions -->
+    <div class="mt-6 bg-white rounded-lg shadow-sm p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Perguntas Rápidas</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <button class="quick-question text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                <i data-feather="map-pin" class="w-4 h-4 inline text-gray-500 mr-2"></i>
+                Onde está o paciente [nome]?
+            </button>
+            <button class="quick-question text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                <i data-feather="user" class="w-4 h-4 inline text-gray-500 mr-2"></i>
+                Quem avaliou o paciente [nome]?
+            </button>
+            <button class="quick-question text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                <i data-feather="activity" class="w-4 h-4 inline text-gray-500 mr-2"></i>
+                Qual o status do paciente [nome]?
+            </button>
+            <button class="quick-question text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                <i data-feather="clipboard" class="w-4 h-4 inline text-gray-500 mr-2"></i>
+                Quantos pacientes tem Dr(a). [nome]?
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .typing-indicator {
+        display: none;
+        align-items: center;
+        space-x: 3;
+    }
+    
+    .typing-indicator.show {
+        display: flex;
+    }
+    
+    .typing-dots {
+        display: flex;
+        space-x: 1;
+    }
+    
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #9CA3AF;
+        animation: pulse 1.4s ease-in-out infinite both;
+    }
+    
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+    .typing-dot:nth-child(3) { animation-delay: 0s; }
+    
+    @keyframes pulse {
+        0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+        40% { transform: scale(1); opacity: 1; }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatForm = document.getElementById('chat-form');
+    const questionInput = document.getElementById('question-input');
+    const sendButton = document.getElementById('send-button');
+    const chatMessages = document.getElementById('chat-messages');
+    const quickQuestions = document.querySelectorAll('.quick-question');
+    
+    // Quick question handlers
+    quickQuestions.forEach(button => {
+        button.addEventListener('click', function() {
+            const questionText = this.textContent.trim();
+            questionInput.value = questionText;
+            questionInput.focus();
+        });
+    });
+    
+    // Chat form submit
+    chatForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const question = questionInput.value.trim();
+        if (!question) return;
+        
+        // Add user message to chat
+        addMessage(question, 'user');
+        
+        // Clear input and disable form
+        questionInput.value = '';
+        setFormLoading(true);
+        
+        // Show typing indicator
+        showTypingIndicator();
+        
+        try {
+            const response = await fetch('{{ url_for("assistant.ask_question") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ question: question })
+            });
+            
+            const data = await response.json();
+            
+            // Hide typing indicator
+            hideTypingIndicator();
+            
+            if (data.success) {
+                addMessage(data.answer, 'assistant');
+            } else {
+                addMessage(data.error || 'Desculpe, ocorreu um erro ao processar sua pergunta.', 'assistant', true);
+            }
+            
+        } catch (error) {
+            hideTypingIndicator();
+            addMessage('Erro de conexão. Tente novamente.', 'assistant', true);
+        }
+        
+        // Re-enable form
+        setFormLoading(false);
+    });
+    
+    function addMessage(text, sender, isError = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'flex items-start space-x-3';
+        
+        const avatarDiv = document.createElement('div');
+        const contentDiv = document.createElement('div');
+        
+        if (sender === 'user') {
+            messageDiv.className += ' flex-row-reverse space-x-reverse';
+            avatarDiv.className = 'bg-gray-100 p-2 rounded-full flex-shrink-0';
+            avatarDiv.innerHTML = '<i data-feather="user" class="w-4 h-4 text-gray-600"></i>';
+            contentDiv.className = 'bg-gray-100 rounded-lg p-4 max-w-lg';
+        } else {
+            avatarDiv.className = 'bg-blue-100 p-2 rounded-full flex-shrink-0';
+            avatarDiv.innerHTML = '<i data-feather="bot" class="w-4 h-4 text-blue-600"></i>';
+            contentDiv.className = isError ? 'bg-red-50 rounded-lg p-4 max-w-lg' : 'bg-blue-50 rounded-lg p-4 max-w-lg';
+        }
+        
+        contentDiv.innerHTML = `<p class="${isError ? 'text-red-800' : 'text-gray-800'}">${text}</p>`;
+        
+        messageDiv.appendChild(avatarDiv);
+        messageDiv.appendChild(contentDiv);
+        
+        chatMessages.appendChild(messageDiv);
+        
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        // Initialize feather icons for new message
+        feather.replace();
+    }
+    
+    function showTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.id = 'typing-indicator';
+        typingDiv.className = 'typing-indicator show';
+        
+        typingDiv.innerHTML = `
+            <div class="bg-blue-100 p-2 rounded-full flex-shrink-0">
+                <i data-feather="bot" class="w-4 h-4 text-blue-600"></i>
+            </div>
+            <div class="bg-blue-50 rounded-lg p-4 max-w-lg">
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+        `;
+        
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        feather.replace();
+    }
+    
+    function hideTypingIndicator() {
+        const typingIndicator = document.getElementById('typing-indicator');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+    }
+    
+    function setFormLoading(loading) {
+        questionInput.disabled = loading;
+        sendButton.disabled = loading;
+        
+        if (loading) {
+            sendButton.innerHTML = '<i data-feather="loader" class="w-4 h-4 animate-spin"></i>';
+        } else {
+            sendButton.innerHTML = '<i data-feather="send" class="w-4 h-4"></i>';
+        }
+        
+        feather.replace();
+    }
+    
+    // Focus on input
+    questionInput.focus();
+});
+</script>
+{% endblock %}

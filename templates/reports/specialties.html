@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Relatório por Especialidades - Sistema TEA{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+            <a href="{{ url_for('reports.index') }}" class="text-gray-500 hover:text-gray-700 mr-4">
+                <i data-feather="arrow-left" class="h-5 w-5"></i>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-900">Relatório por Especialidades</h1>
+        </div>
+        <a href="{{ url_for('reports.export_specialties_csv') }}" class="btn-primary">
+            <i data-feather="download" class="w-4 h-4 mr-2"></i>
+            Exportar CSV
+        </a>
+    </div>
+
+    <!-- Summary -->
+    <div class="bg-white shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Resumo Geral</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {% set total_procedures = specialty_stats.values() | sum(attribute='total') %}
+                {% set total_pending = specialty_stats.values() | sum(attribute='pendente') %}
+                {% set total_allocated = specialty_stats.values() | sum(attribute='alocado') %}
+                {% set total_in_treatment = specialty_stats.values() | sum(attribute='em_atendimento') %}
+                {% set total_completed = specialty_stats.values() | sum(attribute='concluido') %}
+                
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-900">{{ total_procedures }}</div>
+                    <div class="text-sm text-gray-500">Total de Procedimentos</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-yellow-600">{{ total_pending }}</div>
+                    <div class="text-sm text-gray-500">Pendentes</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">{{ total_allocated + total_in_treatment }}</div>
+                    <div class="text-sm text-gray-500">Em Andamento</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">{{ total_completed }}</div>
+                    <div class="text-sm text-gray-500">Concluídos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Table -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Especialidade
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Pendente
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Alocado
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Em Atendimento
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Concluído
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Total
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                % Concluído
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Progresso
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for specialty, stats in specialty_stats.items() %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ specialty }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="badge bg-yellow-100 text-yellow-800">{{ stats.pendente }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="badge bg-blue-100 text-blue-800">{{ stats.alocado }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="badge bg-purple-100 text-purple-800">{{ stats.em_atendimento }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="badge bg-green-100 text-green-800">{{ stats.concluido }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-900">
+                                {{ stats.total }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
+                                {% if stats.total > 0 %}
+                                    {{ (stats.concluido / stats.total * 100) | round(1) }}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                {% if stats.total > 0 %}
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    {% set completed_percent = (stats.concluido / stats.total * 100) %}
+                                    <div class="bg-green-600 h-2 rounded-full" style="width: {{ completed_percent }}%"></div>
+                                </div>
+                                {% else %}
+                                <span class="text-gray-400">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if not specialty_stats %}
+                        <tr>
+                            <td colspan="8" class="px-6 py-12 text-center">
+                                <i data-feather="bar-chart" class="mx-auto h-12 w-12 text-gray-400"></i>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhum dado encontrado</h3>
+                                <p class="mt-1 text-sm text-gray-500">
+                                    Não há procedimentos registrados por especialidade.
+                                </p>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    {% if specialty_stats %}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <!-- Status Distribution Chart -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Distribuição por Estado</h3>
+                <div class="space-y-4">
+                    {% set total_all = total_pending + total_allocated + total_in_treatment + total_completed %}
+                    {% if total_all > 0 %}
+                    <div>
+                        <div class="flex justify-between text-sm">
+                            <span>Pendente</span>
+                            <span>{{ total_pending }} ({{ (total_pending / total_all * 100) | round(1) }}%)</span>
+                        </div>
+                        <div class="mt-1 bg-gray-200 rounded-full h-2">
+                            <div class="bg-yellow-600 h-2 rounded-full" style="width: {{ (total_pending / total_all * 100) }}%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm">
+                            <span>Alocado</span>
+                            <span>{{ total_allocated }} ({{ (total_allocated / total_all * 100) | round(1) }}%)</span>
+                        </div>
+                        <div class="mt-1 bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: {{ (total_allocated / total_all * 100) }}%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm">
+                            <span>Em Atendimento</span>
+                            <span>{{ total_in_treatment }} ({{ (total_in_treatment / total_all * 100) | round(1) }}%)</span>
+                        </div>
+                        <div class="mt-1 bg-gray-200 rounded-full h-2">
+                            <div class="bg-purple-600 h-2 rounded-full" style="width: {{ (total_in_treatment / total_all * 100) }}%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm">
+                            <span>Concluído</span>
+                            <span>{{ total_completed }} ({{ (total_completed / total_all * 100) | round(1) }}%)</span>
+                        </div>
+                        <div class="mt-1 bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-600 h-2 rounded-full" style="width: {{ (total_completed / total_all * 100) }}%"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Specialties -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Especialidades com Mais Procedimentos</h3>
+                <div class="space-y-4">
+                    {% for specialty, stats in (specialty_stats.items() | sort(attribute='1.total', reverse=true))[:5] %}
+                    <div>
+                        <div class="flex justify-between text-sm">
+                            <span class="truncate">{{ specialty }}</span>
+                            <span>{{ stats.total }}</span>
+                        </div>
+                        <div class="mt-1 bg-gray-200 rounded-full h-2">
+                            {% set max_total = specialty_stats.values() | max(attribute='total') %}
+                            <div class="bg-blue-600 h-2 rounded-full" 
+                                 style="width: {{ (stats.total / max_total * 100) if max_total > 0 else 0 }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

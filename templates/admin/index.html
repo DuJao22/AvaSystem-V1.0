@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Administração - Sistema TEA{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Painel de Administração</h1>
+
+    <!-- Admin Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <a href="{{ url_for('admin.users') }}" 
+           class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
+            <div class="flex items-center">
+                <i data-feather="users" class="h-8 w-8 text-blue-600"></i>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Gerenciar Usuários</h3>
+                    <p class="text-sm text-gray-600">Adicionar, editar e desativar usuários do sistema</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="{{ url_for('admin.specialties') }}" 
+           class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
+            <div class="flex items-center">
+                <i data-feather="briefcase" class="h-8 w-8 text-green-600"></i>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Especialidades</h3>
+                    <p class="text-sm text-gray-600">Configurar especialidades médicas disponíveis</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="{{ url_for('admin.locations') }}" 
+           class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
+            <div class="flex items-center">
+                <i data-feather="map-pin" class="h-8 w-8 text-purple-600"></i>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Locais</h3>
+                    <p class="text-sm text-gray-600">Gerenciar locais de avaliação</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="{{ url_for('admin.audit') }}" 
+           class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
+            <div class="flex items-center">
+                <i data-feather="file-text" class="h-8 w-8 text-yellow-600"></i>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Auditoria</h3>
+                    <p class="text-sm text-gray-600">Visualizar logs de ações do sistema</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="{{ url_for('reports.index') }}" 
+           class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
+            <div class="flex items-center">
+                <i data-feather="bar-chart-2" class="h-8 w-8 text-red-600"></i>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Relatórios</h3>
+                    <p class="text-sm text-gray-600">Acessar relatórios e estatísticas</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="{{ url_for('reports.distribution_print') }}" target="_blank"
+           class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow border-2 border-blue-200">
+            <div class="flex items-center">
+                <i data-feather="printer" class="h-8 w-8 text-blue-600"></i>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Relatório de Distribuição</h3>
+                    <p class="text-sm text-gray-600">Imprimir relatório A4 de distribuição de pacientes</p>
+                </div>
+            </div>
+        </a>
+
+        <div class="bg-white p-6 rounded-lg shadow border-2 border-red-200">
+            <div class="flex items-center">
+                <i data-feather="trash-2" class="h-8 w-8 text-red-600"></i>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Reset de Dados</h3>
+                    <p class="text-sm text-gray-600">Remover todos os dados de pacientes (mantém médicos)</p>
+                    <form method="POST" action="{{ url_for('admin.reset_patients') }}" class="mt-4" onsubmit="return confirmReset()">
+                        <div class="flex items-center space-x-3">
+                            <input type="text" name="confirmation" placeholder="Digite CONFIRMO" 
+                                   class="px-3 py-1 text-sm border border-gray-300 rounded" required>
+                            <button type="submit" class="px-4 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700">
+                                Resetar Dados
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Information -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Informações do Sistema</h3>
+            <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Versão do Sistema</dt>
+                    <dd class="mt-1 text-sm text-gray-900">Sistema TEA v1.0</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Desenvolvido por</dt>
+                    <dd class="mt-1 text-sm text-gray-900">João Layon</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Base de Dados</dt>
+                    <dd class="mt-1 text-sm text-gray-900">SQLite3</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Framework</dt>
+                    <dd class="mt-1 text-sm text-gray-900">Flask + TailwindCSS</dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Quick Stats for Admin -->
+    <div class="mt-6 bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Estatísticas Rápidas</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">
+                        <i data-feather="users" class="h-6 w-6 inline mr-2"></i>
+                        <span id="total-users">-</span>
+                    </div>
+                    <div class="text-sm text-gray-500">Usuários Ativos</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">
+                        <i data-feather="user-check" class="h-6 w-6 inline mr-2"></i>
+                        <span id="total-patients">-</span>
+                    </div>
+                    <div class="text-sm text-gray-500">Pacientes Cadastrados</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600">
+                        <i data-feather="file-text" class="h-6 w-6 inline mr-2"></i>
+                        <span id="total-evaluations">-</span>
+                    </div>
+                    <div class="text-sm text-gray-500">Avaliações Realizadas</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-yellow-600">
+                        <i data-feather="clipboard" class="h-6 w-6 inline mr-2"></i>
+                        <span id="total-procedures">-</span>
+                    </div>
+                    <div class="text-sm text-gray-500">Procedimentos Ativos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent System Activity -->
+    <div class="mt-6 bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Atividade Recente do Sistema</h3>
+                <a href="{{ url_for('admin.audit') }}" class="text-sm text-blue-600 hover:text-blue-500">
+                    Ver todas as atividades →
+                </a>
+            </div>
+            
+            <div class="text-center py-6">
+                <i data-feather="activity" class="mx-auto h-12 w-12 text-gray-400"></i>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">Atividade do Sistema</h3>
+                <p class="mt-1 text-sm text-gray-500">
+                    Visualize a atividade recente na página de auditoria.
+                </p>
+                <div class="mt-6">
+                    <a href="{{ url_for('admin.audit') }}" class="btn-primary">
+                        Ver Logs de Auditoria
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Load quick stats (this would typically be done via AJAX, but keeping simple)
+document.addEventListener('DOMContentLoaded', function() {
+    // These would be loaded via AJAX calls to get real-time data
+    // For now, showing placeholder
+    document.getElementById('total-users').textContent = '...';
+    document.getElementById('total-patients').textContent = '...';
+    document.getElementById('total-evaluations').textContent = '...';
+    document.getElementById('total-procedures').textContent = '...';
+});
+
+function confirmReset() {
+    return confirm('ATENÇÃO: Esta operação irá remover TODOS os dados de pacientes, avaliações e procedimentos do sistema de forma PERMANENTE.\n\nOs médicos serão mantidos.\n\nEsta ação NÃO pode ser desfeita!\n\nTem certeza que deseja continuar?');
+}
+</script>
+{% endblock %}

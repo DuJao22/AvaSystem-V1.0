@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if patient %}Editar Paciente{% else %}Novo Paciente{% endif %} - Sistema TEA
+{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <div class="flex items-center mb-6">
+        <a href="{% if patient %}{{ url_for('patients.detail', id=patient.id) }}{% else %}{{ url_for('patients.list') }}{% endif %}" 
+           class="text-gray-500 hover:text-gray-700 mr-4">
+            <i data-feather="arrow-left" class="h-5 w-5"></i>
+        </a>
+        <h1 class="text-2xl font-bold text-gray-900">
+            {% if patient %}Editar Paciente{% else %}Novo Paciente{% endif %}
+        </h1>
+    </div>
+
+    <div class="max-w-2xl mx-auto">
+        <form method="POST" class="space-y-6">
+            <div class="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
+                <div class="md:grid md:grid-cols-3 md:gap-6">
+                    <div class="md:col-span-1">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900">Informações Pessoais</h3>
+                        <p class="mt-1 text-sm text-gray-500">
+                            Dados básicos do paciente.
+                        </p>
+                    </div>
+                    <div class="mt-5 md:mt-0 md:col-span-2">
+                        <div class="grid grid-cols-6 gap-6">
+                            <div class="col-span-6">
+                                <label for="nome" class="block text-sm font-medium text-gray-700">
+                                    Nome completo *
+                                </label>
+                                <input type="text" name="nome" id="nome" required
+                                       value="{{ patient.nome if patient else request.form.get('nome', '') }}"
+                                       class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+
+                            <div class="col-span-6 sm:col-span-3">
+                                <label for="cpf" class="block text-sm font-medium text-gray-700">
+                                    CPF *
+                                </label>
+                                <input type="text" name="cpf" id="cpf" required
+                                       value="{{ patient.format_cpf() if patient else request.form.get('cpf', '') }}"
+                                       {% if patient %}readonly{% endif %}
+                                       placeholder="000.000.000-00"
+                                       class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md {% if patient %}bg-gray-50{% endif %}">
+                                {% if patient %}
+                                <p class="mt-2 text-sm text-gray-500">
+                                    CPF não pode ser alterado após o cadastro.
+                                </p>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-span-6 sm:col-span-3">
+                                <label for="data_nascimento" class="block text-sm font-medium text-gray-700">
+                                    Data de nascimento *
+                                </label>
+                                <input type="date" name="data_nascimento" id="data_nascimento" required
+                                       value="{{ patient.data_nascimento if patient else request.form.get('data_nascimento', '') }}"
+                                       {% if patient %}readonly{% endif %}
+                                       class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md {% if patient %}bg-gray-50{% endif %}">
+                                {% if patient %}
+                                <p class="mt-2 text-sm text-gray-500">
+                                    Data de nascimento não pode ser alterada após o cadastro.
+                                </p>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-span-6 sm:col-span-3">
+                                <label for="telefone" class="block text-sm font-medium text-gray-700">
+                                    Telefone
+                                </label>
+                                <input type="tel" name="telefone" id="telefone"
+                                       value="{{ patient.telefone if patient else request.form.get('telefone', '') }}"
+                                       placeholder="(11) 99999-9999"
+                                       class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+
+                            <div class="col-span-6 sm:col-span-3">
+                                <label for="local_referencia" class="block text-sm font-medium text-gray-700">
+                                    Local de referência
+                                </label>
+                                <input type="text" name="local_referencia" id="local_referencia"
+                                       value="{{ patient.local_referencia if patient else request.form.get('local_referencia', '') }}"
+                                       class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <a href="{% if patient %}{{ url_for('patients.detail', id=patient.id) }}{% else %}{{ url_for('patients.list') }}{% endif %}" 
+                   class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Cancelar
+                </a>
+                <button type="submit" 
+                        class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    {% if patient %}Atualizar{% else %}Salvar{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Format CPF input
+    const cpfInput = document.getElementById('cpf');
+    if (cpfInput && !cpfInput.readOnly) {
+        cpfInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            e.target.value = value;
+        });
+    }
+
+    // Format phone input
+    const phoneInput = document.getElementById('telefone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length <= 10) {
+                value = value.replace(/(\d{2})(\d)/, '($1) $2');
+                value = value.replace(/(\d{4})(\d)/, '$1-$2');
+            } else {
+                value = value.replace(/(\d{2})(\d)/, '($1) $2');
+                value = value.replace(/(\d{5})(\d)/, '$1-$2');
+            }
+            e.target.value = value;
+        });
+    }
+});
+</script>
+{% endblock %}
